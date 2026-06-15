@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI는 새로운 계급을 만드는가?</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --teal: #2D7D7D;
+    --sage: #5E8B74;
+    --teal-light: #4AADAD;
+    --sage-light: #85B89A;
+    --teal-pale: #E6F4F4;
+    --sage-pale: #EDF4EF;
+    --white: #FFFFFF;
+    --gray-100: #F4F6F5;
+    --gray-200: #E8ECEB;
+    --gray-400: #9AADA7;
+    --gray-600: #5C6E69;
+    --gray-800: #2B3A36;
+    --text: #1E2E2A;
+    --accent: #2D7D7D;
+    --free-color: #9AADA7;
+    --paid-color: #2D7D7D;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    background: #1a2422;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  /* NAV */
+  .nav {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-bottom: 16px;
+    max-width: 960px;
+  }
+  .nav button {
+    background: #2B3A36;
+    color: var(--gray-400);
+    border: 1px solid #3a4f4a;
+    border-radius: 20px;
+    padding: 5px 13px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: inherit;
+  }
+  .nav button:hover, .nav button.active {
+    background: var(--teal);
+    color: white;
+    border-color: var(--teal);
+  }
+  /* SLIDE */
+  .slide {
+    display: none;
+    background: var(--white);
+    width: 960px;
+    min-height: 540px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,.4);
+    position: relative;
+  }
+  .slide.active { display: flex; flex-direction: column; }
+
+  /* HEADER */
+  .slide-header {
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+  .slide-num {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    color: var(--teal);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .slide-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .slide-subtitle {
+    font-size: 13px;
+    color: var(--gray-600);
+    margin-top: 4px;
+  }
+  /* CHIPS */
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .chip {
+    background: var(--teal-pale);
+    color: var(--teal);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  /* BODY */
+  .slide-body {
+    padding: 24px 40px 28px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  /* KEY STAT */
+  .key-stat {
+    background: var(--teal);
+    color: white;
+    border-radius: 8px;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+  .key-stat span { font-size: 24px; font-weight: 800; }
+  /* 3-CARD GRID */
+  .card-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .card {
+    background: var(--gray-100);
+    border-radius: 8px;
+    padding: 16px;
+    border-top: 3px solid var(--teal);
+  }
+  .card.accent { border-top-color: var(--sage); }
+  .card.highlight { border-top-color: #E07B54; }
+  .card-num { font-size: 11px; font-weight: 700; color: var(--teal); margin-bottom: 6px; }
+  .card-head { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .card-body { font-size: 12px; color: var(--gray-600); line-height: 1.6; }
+  /* CHART AREA */
+  .charts-row { display: grid; gap: 16px; }
+  .chart-box {
+    background: var(--gray-100);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .chart-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--gray-600);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+  }
+  /* BAR COMPARE */
+  .bar-compare { display: flex; flex-direction: column; gap: 8px; }
+  .bar-item { display: flex; align-items: center; gap: 8px; }
+  .bar-item-label { font-size: 11px; color: var(--gray-600); min-width: 80px; text-align: right; }
+  .bar-track { flex: 1; height: 22px; background: var(--gray-200); border-radius: 4px; overflow: hidden; position: relative; }
+  .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px; font-size: 11px; font-weight: 700; color: white; transition: width .6s ease; }
+  .bar-fill.paid { background: var(--paid-color); }
+  .bar-fill.free { background: var(--free-color); }
+  .bar-val { font-size: 11px; font-weight: 700; color: var(--gray-600); min-width: 38px; }
+  /* LEGEND */
+  .legend { display: flex; gap: 16px; margin-top: 4px; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--gray-600); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  /* DONUT */
+  .donut-wrap { display: flex; align-items: center; gap: 16px; }
+  .donut-stats { display: flex; flex-direction: column; gap: 8px; }
+  .donut-stat-item { font-size: 12px; color: var(--gray-600); }
+  .donut-stat-item strong { font-size: 20px; font-weight: 800; color: var(--teal); display: block; }
+  /* STAT ROW */
+  .stat-row { display: flex; gap: 16px; }
+  .stat-box {
+    flex: 1;
+    background: var(--gray-100);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-box .num { font-size: 28px; font-weight: 800; color: var(--teal); }
+  .stat-box .lbl { font-size: 11px; color: var(--gray-600); margin-top: 2px; }
+  /* TIMELINE */
+  .timeline { display: flex; gap: 0; align-items: flex-end; height: 100px; padding: 0 8px; }
+  .tl-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .tl-bar { width: 80%; border-radius: 4px 4px 0 0; background: var(--teal); }
+  .tl-lbl { font-size: 9px; color: var(--gray-600); text-align: center; }
+  .tl-val { font-size: 10px; font-weight: 700; color: var(--teal); }
+  /* DIVERGING */
+  .diverg-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .diverg-label { font-size: 11px; color: var(--gray-600); min-width: 90px; text-align: right; }
+  .diverg-center { width: 8px; background: var(--gray-400); height: 100%; }
+  .diverg-bar-paid { height: 18px; background: var(--paid-color); border-radius: 0 3px 3px 0; display: flex; align-items: center; padding-right: 4px; justify-content: flex-end; }
+  .diverg-bar-free { height: 18px; background: var(--free-color); border-radius: 3px 0 0 3px; display: flex; align-items: center; padding-left: 4px; }
+  .diverg-pct { font-size: 9px; font-weight: 700; color: white; }
+  /* CAUTION BOX */
+  .caution {
+    background: #FFF8F0;
+    border-left: 3px solid #E07B54;
+    border-radius: 0 6px 6px 0;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: #7A4A2A;
+    line-height: 1.6;
+  }
+  /* POLICY BOX */
+  .policy-box {
+    background: var(--teal-pale);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 12px;
+    color: var(--teal);
+    font-weight: 600;
+    line-height: 1.6;
+  }
+  /* FOOTER LINE */
+  .slide-footer {
+    height: 3px;
+    background: linear-gradient(90deg, var(--teal), var(--sage));
+    margin-top: auto;
+  }
+  /* COVER */
+  .cover-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 48px 64px;
+    flex: 1;
+    background: linear-gradient(135deg, #F4FAF9 0%, #EDF6F4 100%);
+  }
+  .cover-tag {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .15em;
+    color: var(--teal);
+    margin-bottom: 16px;
+  }
+  .cover-title {
+    font-size: 36px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.25;
+    margin-bottom: 12px;
+  }
+  .cover-title em { color: var(--teal); font-style: normal; }
+  .cover-subtitle {
+    font-size: 16px;
+    color: var(--gray-600);
+    font-weight: 400;
+    margin-bottom: 32px;
+    line-height: 1.6;
+  }
+  .cover-meta { font-size: 12px; color: var(--gray-400); line-height: 1.8; }
+  .cover-icon {
+    position: absolute;
+    right: 80px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: .1;
+  }
+  /* TRANSITION Q */
+  .transition-q {
+    background: var(--teal);
+    color: white;
+    border-radius: 8px;
+    padding: 18px 24px;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.5;
+    margin-top: 8px;
+  }
+  /* DATA SOURCE TAG */
+  .datasource {
+    font-size: 10px;
+    color: var(--gray-400);
+    text-align: right;
+    padding: 0 40px 8px;
+  }
+  /* OR CHART */
+  .or-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .or-label { font-size: 11px; color: var(--gray-600); min-width: 90px; }
+  .or-track { flex: 1; height: 14px; background: var(--gray-200); border-radius: 3px; position: relative; }
+  .or-bar { position: absolute; height: 100%; border-radius: 3px; }
+  .or-bar.pos { background: var(--teal); left: 50%; }
+  .or-bar.neg { background: var(--free-color); right: 50%; }
+  .or-center { position: absolute; left: 50%; width: 2px; height: 20px; background: var(--gray-600); top: -3px; }
+  .or-val { font-size: 11px; font-weight: 700; color: var(--text); min-width: 38px; }
+  .sig { color: var(--teal); font-weight: 800; }
+  /* REF */
+  .ref-list { font-size: 11px; color: var(--gray-600); line-height: 2; }
+  .ref-list li { list-style: none; padding-left: 12px; border-left: 2px solid var(--gray-200); margin-bottom: 6px; }
+  /* two col */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="active" onclick="go(0)">표지</button>
+  <button onclick="go(1)">01 문제배경</button>
+  <button onclick="go(2)">02 문제제기</button>
+  <button onclick="go(3)">03 데이터·방법</button>
+  <button onclick="go(4)">04 경계</button>
+  <button onclick="go(5)">05 활용</button>
+  <button onclick="go(6)">06 효용</button>
+  <button onclick="go(7)">07 자기강화</button>
+  <button onclick="go(8)">08 로지스틱</button>
+  <button onclick="go(9)">09 토의①</button>
+  <button onclick="go(10)">10 토의②</button>
+  <button onclick="go(11)">11 참고문헌</button>
+  <button onclick="go(12)">발표 스크립트</button>
+</div>
+
+<!-- ===== 표지 ===== -->
+<div class="slide active" id="s0">
+  <div class="cover-body">
+    <div class="cover-tag">KOSSDA 공모전 · 2026</div>
+    <div class="cover-title">AI는 <em>새로운 계급</em>을 만드는가?</div>
+    <div class="cover-subtitle">유료 사용자와 무료 사용자,<br>그리고 벌어지는 활용의 격차</div>
+    <div class="cover-meta">
+      데이터: 생성형 AI 서비스 소비자 동향조사 1차 (KOSSDA A1-2026-0004)<br>
+      대상: 전국 만18~65세 성인 n=800 · 2026년 1월 4주<br>
+      팀원 4인
+    </div>
+    <!-- icon -->
+    <svg class="cover-icon" width="220" height="220" viewBox="0 0 220 220" fill="none">
+      <rect x="60" y="160" width="40" height="40" rx="6" fill="#2D7D7D"/>
+      <rect x="90" y="120" width="40" height="80" rx="6" fill="#2D7D7D"/>
+      <rect x="120" y="80" width="40" height="120" rx="6" fill="#2D7D7D"/>
+      <rect x="150" y="40" width="40" height="160" rx="6" fill="#2D7D7D"/>
+      <line x1="50" y1="200" x2="200" y2="200" stroke="#2D7D7D" stroke-width="3"/>
+      <circle cx="80" cy="155" r="8" fill="none" stroke="#5E8B74" stroke-width="2.5"/>
+      <circle cx="110" cy="115" r="8" fill="none" stroke="#5E8B74" stroke-width="2.5"/>
+      <line x1="86" y1="150" x2="104" y2="121" stroke="#5E8B74" stroke-width="2" stroke-dasharray="3 2"/>
+    </svg>
+  </div>
+  <div class="slide-footer"></div>
+</div>
+
+<!-- ===== 01 문제 배경 ===== -->
+<div class="slide" id="s1">
+  <div class="slide-header">
+    <div>
+      <div class="slide-num">01 | 문제 배경</div>
+      <div class="slide-title">"누구나 쓰는 AI, 그러나 같은 AI인가?"</div>
+      <div class="slide-subtitle">생성형 AI의 대중화 현황과 이중 구조의 등장</div>
+      <div class="chips">
+        <span class="chip">#생성형AI</span>
+        <span class="chip">#유료구독</span>
+        <span class="chip">#디지털격차</span>
+        <span class="chip">#활용역량</span>
+      </div>
+    </div>
+    <!-- Donut -->
+    <div style="text-align:center; min-width:140px">
+      <canvas id="donutChart" width="110" height="110"></canvas>
+      <div style="font-size:10px;color:var(--gray-400);margin-top:4px">AI 이용자 중 유료 비율</div>
+    </div>
+  </div>
+  <div class="slide-body">
+    <div class="key-stat">
+      "접근은 누구에게나 열려 있다" — 전체 응답자 800명 중 <span>75.4%</span>가 생성형 AI를 직접 이용한 경험이 있다.
+      그러나 이용자 603명 중 유료 구독자는 <span>14.4%</span>에 불과하다.
+      <span style="font-size:12px;font-weight:400;opacity:.85"> ·  미국 성인 ChatGPT 이용률 34% (Pew Research, 2025.6) · 선진국-개도국 AI 격차 9.8→10.6%p 확대 (ITU, 2025)</span>
+    </div>
+    <div class="two-col" style="gap:16px">
+      <div class="chart-box">
+        <div class="chart-label">① AI 인지·이용 현황 (n=800)</div>
+        <canvas id="awareChart" height="130"></canvas>
+      </div>
+      <div class="chart-box">
+        <div class="chart-label">② 최초 이용 시점 — 확산 타임라인 (n=603)</div>
+        <canvas id="timelineChart" height="130"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="datasource">출처: 생성형 AI 서비스 소비자 동향조사 1차 (KOSSDA A1-2026-0004), n=800</div>
+  <div class="slide-footer"></div>
+</div>
+
+<!-- ===== 02 문제 제기 ===== -->
+<div class="slide" id="s2">
+  <div class="slide-header">
+    <div>
+      <div class="slide-num">02 | 문제 제기</div>
+      <div class="slide-title">"AI는 지식을 민주화하는가, 새로운 격차를 만드는가?"</div>
+      <div class="slide-subtitle">낙관론 vs 우려 → 데이터로 검증 가능한 질문으로</div>
+    </div>
+  </div>
+  <div class="slide-body">
+    <div class="card-row">
+      <div class="card">
+        <div class="card-num">낙관론</div>
+        <div class="card-head">💡 "AI는 평등의 도구"</div>
+        <div class="card-body">"무료로 열려 있는 AI는 누구에게나 전문가급 지식을 제공한다. 이는 교육·정보의 민주화다."<br><br><em style="color:var(--gray-400);font-size:10px">— McKinsey (2023) / OpenAI GPT-4 기술보고서</em></div>
+      </div>
+      <div class="card accent">
+        <div class="card-num">우려</div>
+        <div class="card-head">⚠️ "디지털 격차 → AI 격차"</div>
+        <div class="card-body">디지털 리터러시·소득·직업에 따라 AI를 더 잘 활용하는 집단이 나뉜다. 접근 ≠ 활용 역량.<br><br><em style="color:var(--gray-400);font-size:10px">— 오주현 (KISDI, 2026) / NIA 디지털격차 실태조사 (2025)</em></div>
+      </div>
+      <div class="card highlight">
+        <div class="card-num">전환 질문</div>
+        <div class="card-head">🔎 "경계는 무엇으로 그어지나?"</div>
+        <div class="card-body">접근은 평등해도, 누가 더 깊이 쓰고 더 많이 얻는가? 그 경계선은 결국 무엇을 따라가는가?</div>
+      </div>
+    </div>
+    <!-- 미리보기 데이터 -->
+    <div style="display:flex;gap:16px;align-items:stretch">
+      <div class="chart-box" style="flex:1">
+        <div class="chart-label">C10-8: "AI는 사회를 경제적으로 어떻게 만들 것인가?" (n=800)</div>
+        <div style="margin-top:12px">
+          <div class="bar-item" style="margin-bottom:8px">
+            <div class="bar-item-label" style="min-width:100px;font-size:11px">더 불평등하게</div>
+            <div class="bar-track"><div class="bar-fill paid" style="width:66.5%">66.5%</div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-item-label" style="min-width:100px;font-size:11px">더 평등하게</div>
+            <div class="bar-track"><div class="bar-fill free" style="width:33.5%">33.5%</div></div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:var(--gray-400);margin-top:8px">※ 응답자 2/3는 AI가 불평등을 심화할 것이라 우려</div>
+      </div>
+      <div style="flex:1.2">
+        <div class="transition-q">
+          무료로 열려 있는 AI,<br>
+          그러나 <strong>활용의 격차</strong>는 누구를 따라 벌어지는가?
+        </div>
+        <div style="font-size:11px;color:var(--gray-400);margin-top:10px;padding:0 4px;line-height:1.7">
+          → 인식(66.5%)과 달리 실제 이용 데이터가 말하는 것은? (슬라이드 04~08에서 검증)
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="datasource">출처: KOSSDA A1-2026-0004, n=800</div>
+  <div class="slide-footer"></div>
+</div>
+
+<!-- ===== 03 데이터·방법 ===== -->
+<div class="slide" id="s3">
+  <div class="slide-header">
+    <div>
+      <div class="slide-num">03 | 데이터 선택과 분석</div>
+      <div class="slide-title">"왜 이 데이터인가? 어떻게 분석하는가?"</div>
+      <div class="slide-subtitle">데이터 선정 근거 · 핵심 변수 · 분석 방법론</div>
+    </div>
+  </div>
+  <div class="slide-body">
+    <div class="card-row">
+      <div class="card">
+        <div class="card-num">궁금증 ①</div>
+        <div class="card-head">유료/무료의 경계는?</div>
+        <div class="card-body">누가 돈을 내는가<br>→ 슬라이드 04<br><br><em style="font-size:10px;color:var(--gray-400)">변수: DQ12 소득, DQ7 학력, DQ8 직업, SQ2 연령, DQ11 AI환경</em></div>
+      </div>
+      <div class="card accent">
+        <div class="card-num">궁금증 ②</div>
+        <div class="card-head">격차의 실체는?</div>
+        <div class="card-body">더 자주·더 넓게·더 많이<br>→ 슬라이드 05~06<br><br><em style="font-size:10px;color:var(--gray-400)">변수: A9 빈도, A12 시간, A15 용도, A16 도움도</em></div>
+      </div>
+      <div class="card highlight">
+        <div class="card-num">궁금증 ③</div>
+        <div class="card-head">계급의 재생산?</div>
+        <div class="card-body">기존 격차가 AI에서 반복<br>→ 슬라이드 07~08<br><br><em style="font-size:10px;color:var(--gray-400)">변수: C3 자기평가, C10 기대, C8 인식, 로지스틱 회귀</em></div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="chart-box">
+        <div class="chart-label">📁 데이터 출처</div>
+        <div style="font-size:12px;color:var(--text);line-height:2">
+          <strong>생성형 AI 서비스 소비자 동향조사 1차</strong><br>
+          KOSSDA A1-2026-0004 (Ver. 1.1)<br>
+          조사시기: 2026년 1월 4주<br>
+          대상: 전국 만18~65세 성인<br>
+          <strong>유효 응답: n=800</strong> (AI 이용자 n=603)
+        </div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-label">🔬 분석 방법</div>
+        <div style="font-size:12px;color:var(--text);line-height:1.9">
+          <strong>1단계</strong> 기술통계 — 인지·이용 현황, 유료 비율<br>
+          <strong>2단계</strong> 집단 비교 — 유료 vs 무료 차이<br>
+          <strong>3단계</strong> Mann-Whitney U 검정 (비모수)<br>
+          <strong>4단계</strong> 로지스틱 회귀 — 유료 여부 예측<br>
+          <em style="font-size:10px;color:var(--gray-400)">유의수준 α=0.05 / Python(pyreadstat·scipy·statsmodels)</em>
+        </div>
+      </div>
+    </div>
+    <div class="chart-box" style="margin-top:10px;background:var(--teal-pale);border:1px solid var(--teal-light)">
+      <div class="chart-label" style="color:var(--teal)">📌 데이터 선정 근거 (심사기준 ②)</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;font-size:11px;color:var(--text)">
+        <div><strong style="color:var(--teal)">① 국내 최고 공신력</strong><br>서울대 KOSSDA 보관 · 공식 DOI 부여 · 학술적 활용 가능</div>
+        <div><strong style="color:var(--teal)">② 유일한 국내 AI 소비자 패널</strong><br>2026년 1월 — 생성형 AI 유료/무료 이용 행태를 직접 묻는 국내 최초 서베이</div>
+        <div><strong style="color:var(--teal)">③ 질문과 데이터의 정합성</strong><br>BA6_12(유료 만족)·BA5(전환 의도)로 유료/무료 직접 구분 가능 · 관련 변수 197개 제공</div>
+      </div>
+    </div>
+    <div class="caution" style="margin-top:8px">⚠️ 인과 주의: 1차 단면 자료이므로 집단 간 차이는 상관이지 인과가 아닙니다. 분석은 기존 우려를 데이터로 재검토하는 탐색적 성격입니다.</div>
+  </div>
+  <div class="slide-footer"></div>
+</div>
+
+<!-- ===== 04 경계 ===== -->
+<div class="slide" id="s4">
+  <div class="slide-header">
+    <div>
+      <div class="slide-num">04 | 시각화 ① 경계</div>
+      <div class="slide-title">"누가 지갑을 여는가?"</div>
+      <div class="slide-subtitle">유료/무료 사용자의 사회경제 프로필 + 카이제곱 검정</div>
+    </div>
+  </div>
+  <div class="slide-body">
+    <div class="three-col" style="gap:12px">
+      <div class="chart-box">
+        <div class="chart-label">직장 AI환경별 유료율 <span style="color:var(--teal);font-weight:700">χ²=19.5, p&lt;.001 ✓</span></div>
+        <div class="bar-compare" style="margin-top:6px">
+          <div class="bar-item">
+            <div class="bar-item-label" style="font-size:10px;min-width:70px">무관심</div>
+            <div class="bar-track"><div class="bar-fill free" style="width:8%;background:#C5D8D5;min-width:28px">8.0%</div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-item-label" style="font-size:10px;min-width:70px">자율 허용</div>
+            <div class="bar-track"><div class="bar-fill free" style="width:12.9%;min-width:34px">12.9%</div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-item-label" style="font-size:10px;min-width:70px;font-weight:700;color:var(--teal)">적극 권장</div>
+            <div class="bar-track"><div class="bar-fill paid" style="width:28.6%">28.6%</div></div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:#E07B54;margin-top:8px;font-weight:600">유일하게 유의 — 직장 지원이 핵심</div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-label">성별별 유료율 <span style="color:var(--teal);font-weight:700">로지스틱 OR=2.17**</span></div>
+        <div style="display:flex;gap:12px;align-items:center;padding:10px 0">
+          <div style="flex:1;text-align:center">
+            <div style="font-size:30px;font-weight:800;color:var(--teal)">18.9%</div>
+            <div style="font-size:11px;color:var(--gray-600)">남성 (n=303)</div>
+          </div>
+          <div style="font-size:20px;color:var(--gray-400)">vs</div>
+          <div style="flex:1;text-align:center">
+            <div style="font-size:30px;font-weight:800;color:var(--free-color)">9.4%</div>
+            <div style="font-size:11px;color:var(--gray-600)">여성 (n=300)</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:#E07B54;font-weight:600">남성이 2배 이상 유료 전환 — NEW 발견</div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-label">소득·학력 <span style="color:var(--gray-400)">p&gt;.10 비유의 ✗</span></div>
+        <div class="bar-compare" style="margin-top:6px">
+          <div class="bar-item"><div class="bar-item-label" style="font-size:10px;min-width:70px">200만↓</div><div class="bar-track"><div class="bar-fill free" style="width:14%;min-width:30px">14%</div></div></div>
+          <div class="bar-item"><div class="bar-item-label" style="font-size:10px;min-width:70px">200-400만</div><div class="bar-track"><div class="bar-fill free" style="width:12.1%;min-width:34px">12%</div></div></div>
+          <div class="bar-item"><div class="bar-item-label" style="font-size:10px;min-width:70px">400-600만</div><div class="bar-track"><div class="bar-fill paid" style="width:16.9%">17%</div></div></div>
+          <div class="bar-item"><div class="bar-item-label" style="font-size:10px;min-width:70px">600-800만</div><div class="bar-track"><div class="bar-fill free" style="width:9.3%;background:#C5D8D5;min-width:28px">9%</div></div></div>
+          <div class="bar-item"><div class="bar-item-label" style="font-size:10px;min-width:70px;font-weight:700">800만↑</div><div class="bar-track"><div class="bar-fill paid" style="width:20%">20%</div></div></div>
+        </div>
+        <div style="font-size:10px;color:var(--gray-400);margin-top:6px">소득 χ²=6.2, p=0.185 / 학력 χ²=4.8, p=0.187</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px">
+      <div class="chart-box" style="flex:1">
+        <div class="chart-label">연령대별 유료 이용률</div>
+        <div class="bar-compare" style="margin-top:4px">
+          <div class="bar-item"><div class="bar-item-label" style="min-width:60px">18-29</div><div class="bar-track"><div class="bar-fill paid" style="width:17.7%">17.7%</div></div></div>
+          <div class="bar-item"><div class="bar-item-label" style="min-width:60px;font-weight:700;color:var(--teal)">30대</div><div class="bar-track"><div class="bar-fill paid" style="width:18%">18.0%</div></div></div>
+          <div class="bar-item"><div class="bar-item-label" style="min-width:60px">40대</div><div class="bar-track"><div class="bar-fill free" style="width:12.1%">12.1%</div></div></div>
+          <div class="bar-item"><div class="bar-item-label" style="min-width:60px">50대</div><div class="bar-track"><div class="bar-fill free" style="width:10.8%;background:#C5D8D5">10.8%</div></div></div>
+          <div class="bar-item"><div class="bar-item-label" style="min-width:60px">60+</div><div class="bar-track"><div class="bar-fill free" style="width:12.1%">12.1%</div></div></div>
+        </div>
+      </div>
+      <div class="key-stat" style="flex:1.5">
+        📌 카이제곱 검정 결과: 소득·학력은 유료 구분과 <span>통계적으로 무관</span> (p&gt;.10)<br>
+        <span>직장 AI환경</span>(p&lt;.001)과 <span>성별</span>(남성 OR=2.17)이 핵심 경계선
+      </div>
+    </div>
+  </div>
+  <div class="datasource">출처: KOSSDA A1-2026-0004, n=603 / 카이제곱 χ² 검정: scipy.stats.chi2_contingency</div>
+  <div class="slide-footer"></div>
+</div>
+
+<!-- ===== 05 활용 ===== -->
+<div class="slide" id="s5">
+  <div class="slide-header">
+    <div>
+      <div class="slide-num">05 | 시각화 ② 활용</div>
+      <div class="slide-title">"더 자주, 더 넓게"</div>
+      <div class="slide-subtitle">유료 vs 무료 — 이용 빈도·용도의 폭 · Kruskal-Wallis 검정</div>
+    </div>
+  </div>
+  <div class="slide-body">
+    <div class="stat-row">
+      <div class="stat-box">
+        <div class="num" style="font-size:22px">5.46 <span style="font-size:13px;color:var(--gray-400)">vs</span> 4.52</div>
+        <div class="lbl">이용 빈도 (7점 척도)<br>유료 vs 무료</div>
+      </div>
+      <div class="stat-box">
+        <div class="num">4.1<span style="font-size:14px"> vs </span>2.7</div>
+        <div class="lbl">평균 용도 수 (10개 중)<br>유료 vs 무료</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" style="color:#E07B54">p&lt;.001</div>
+        <div class="lbl">MW + BM 비모수 검정<br>유료 &gt; 무료 유의</div>
+      </div>
+      <div class="stat-box" style="background:var(--teal-pale)">
+        <div class="num" style="font-size:16px;color:var(--teal)">H=10.4<br><span style="font-size:12px">p=.015</span></div>
+        <div class="lbl">Kruskal-Wallis<br>직장환경 × 활용폭</div>
+      </div>
+    </div>
+    <div class="two-col">
+      <div class="chart-box">
+        <div class="chart-label">용도별 이용률 — 유료(■) vs 무료(■)</div>
+        <canvas id="useChart" height="130"></canvas>
+        <div class="legend" style="margin-top:6px">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--paid-color)"></div> 유료 (n=87)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--free-color)"></div> 무료 (n=416)</div>
+        </div>
+      </div>
+      <div class="chart-box">
+        <div class="chart-label">직장 AI환경별 평균 활용폭 (Kruskal-Wallis H=10.4, p=.015)</div>
+        <div class="bar-compare" style="margin-top:8px">
+          <div class="bar-item">
+            <div class="bar-item-label" style="font-size:10px;min-width:75px">금지</div>
+            <div class="bar-track"><div class="bar-fill free" style="width:24.5%;background:#C5D8D5">2.45</div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-item-label" style="font-size:10px;min-width:75px">무관심</div>
+            <div class="bar-track"><div class="bar-fill free" style="width:27.5%">2.75</div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-item-label" style="font-size:10px;min-width:75px">자율 허용</div>
+            <div class="bar-track"><div class="bar-fill paid" style="width:30.9%">3.09</div></div>
+          </div>
+          <div class="bar-item">
+            <div class="bar-item-label" style="font-size:10px;min-width:75px;font-weight:700;color:var(--teal)">적극 권장</div>
+            <div class="bar-track"><div class="bar-fill paid" style="width:35.7%">3.57</div></div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--gray-600);margin-top:10px;line-height:1.7">
+          소득 6구간 × 활용폭도 Kruskal-Wallis 유의<br>
+          (H=13.4, p=.020) — 단, 저소득층 median=3.0 &gt; 고소득 median=2.0<br>
+          <em style="color:var(--teal);font-size:10px">→ 소득보다 직장 환경이 더 강한 예측변수</em>
+        </div>
+      </div>
+    </div>
+    <div class="key-stat">
+      📌 아이디어발상(<span>+29.1%p</span>) · 코딩/분석(<span>+14.7%p</span>) · 업무자동화(<span>+14.7%p</span>) — 고부가가치 용도로 갈수록 격차 확대. Kruskal-Wallis로 집단 간 차이 확인.
+    </div>
+  </div>
+  <div class="datasource">출처: KOSSDA A1-2026-0004 / A15_1~10(용도), Kruskal-Wallis: scipy.stats.kruskal()</div>
+  <div class="slide-footer"></div>
+</div>
+
+<!-- ===== 06 효용 ===== -->
+<div class="slide" id="s6">
+  <div class="slide-header">
+    <div>
+      <div class="slide-num">06 | 시각화 ③ 효용</div>
+      <div class="slide-title">"더 많이 얻는다"</div>
+      <div class="slide-subtitle">A16 도움 정도 — 통계 검정으로 입증</div>
+    </div>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div class="chart-box">
+        <div class="chart-label">A16: AI 이용 전후 생활 도움 정도</div>
+        <canvas id="helpChart" height="150"></canvas>
+        <div class="legend" style="margin-top:6px">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--paid-color)"></div> 유료 (n=87)</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--free-color)"></div> 무료 (n=416)</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="chart-box">
+          <div class="chart-label">통계 검정 결과 (비모수 2종)</div>
+          <table style="width:100%;font-size:11px;border-collapse:collapse">
+            <tr style="background:var(--gray-200)"><th style="padding:5px;text-align:left">검정</th><th style="padding:5px">통계량</th><th style="padding:5px">p-값</th></tr>
+            <tr><td style="padding:5px">Mann-Whitney U</td><td style="padding:5px;text-align:center">24,022</td><td style="padding:5px;text-align:center;color:var(--teal);font-weight:700">&lt;0.001 ***</td></tr>
+            <tr style="background:var(--gray-100)"><td style="padding:5px">Brunner-Munzel W</td><td style="padding:5px;text-align:center">−5.70</td><td style="padding:5px;text-align:center;color:var(--teal);font-weight:700">&lt;0.001 ***</td></tr>
+            <tr><td style="padding:5px">유료 평균 (4점)</td><td style="padding:5px;text-align:center;font-weight:700;color:var(--teal)">3.43</td><td style="padding:5px;text-align:center;color:var(--gray-400)">—</td></tr>
+            <tr style="background:var(--gray-100)"><td style="padding:5px">무료 평균 (4점)</td><td style="padding:5px;text-align:center">3.03</td><td style="padding:5px;text-align:center;color:var(--gray-400)">—</td></tr>
+          </table>
+          <div style="font-size:10px;color:var(--gray-400);margin-top:5px">BM: 표본 불균형에 강건한 비모수 검정</div>
+        </div>
+        <div class="stat-box" style="text-align:left;padding:14px 16px">
+          <div style="font-size:12px;font-weight:700;color:var(--teal);margin-bottom:6px">핵심 수치</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.8">
+            유료 '매우 도움': <strong style="color:var(--teal)">47.1%</strong><br>
+            무료 '매우 도움': <strong>18.0%</strong><br>
+            차이: <strong style="color:var(--teal)">+29.1%p</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:10px">
+      <div class="chart-label">활용 기능 수 분포 — 유료 vs 무료 (n_uses 1~10개)</div>
+      <canvas id="distChart" height="65"></canvas>
+      <div class="legend" style="margin-top:4px">
+        <div class="legend-item"><div class="legend-dot" style="background:var(--paid-color)"></div> 유료 평균 4.05개</div>
+        <div class="legend-item"><div class="legend-dot" style="background:var(--free-color)"></div> 무료 평균 2.68개</div>
+      </div>
+    </div>
+    <div class="key-stat">
+      📌 같은 무료/유료 선을 넘으면 '얻는 것'의 양과 질이 통계적으로 유의하게 달라진다 (p&lt;.001)
+    </div>
+  </div>
+  <div class="datasource">출처: KOSSDA A1-2026-0004 / A16(도움 정도), Mann-Whitney U 단측 검정 / n_uses 분포: A15_1~10</div>
+  <div class="slide-footer"></div>
+</div>
+
+<!-- ===== 07 자기강화 ===== -->
+<div class="slide" id="s7">
+  <div class="slide-header">
+    <div>
+      <div class="slide-num">07 | 시각화 ④ 자기강화</div>
+      <div class="slide-title">"격차는 스스로 벌어진다"</div>
+      <div class="slide-subtitle">앞선 집단이 더 긍정적이고 더 투자한다 — 미래 전망</div>
+    </div>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div class="chart-box">
+        <div class="chart-label">C3: 상대적 AI 이용 자기평가 (5점 척도 평균)</div>
+        <div class="bar-compare" style="margin-top:8px">
+          <div style="font-size:10px;color:var(--gray-400);margin-bottom:6px;display:flex;justify-content:space-between"><span>낮음 (1)</span><span>높음 (5)</span></div>
+          <!-- C3_1 -->
+          <div style="margin-bottom:8px">
+            <div style="font-size:11px;color:var(--gray-600);margin-bottom:3px">① AI 활용을 일찍 시작한 편</div>
+            <div class="bar-item">
+              <div style="font-size:10px;min-width:30px;color:var(--teal);font-weight:700">유료</div>
+              <div class="bar-track"><div class="bar-fill paid" style="width:60.4%">3.02</div></div>
+            </div>
+            <div class="bar-item">
+              <div style="font-size:10px;min-width:30px;color:var(--gray-400)">무료</div>
+              <div class="bar-track"><div class="bar-fill free" style="width:56%">2.80</div></div>
+            </div>
+          </div>
+          <!-- C3_2 -->
+          <div style="margin-bottom:8px">
+            <div style="font-size:11px;color:var(--gray-600);margin-bottom:3px">② AI를 많이 활용하고 있음</div>
+            <div class="bar-item">
+              <div style="font-size:10px;min-width:30px;color:var(--teal);font-weight:700">유료</div>
+              <div class="bar-track"><div class="bar-fill paid" style="width:75.2%">3.76</div></div>
+            </div>
+            <div class="bar-item">
+              <div style="font-size:10px;min-width:30px;color:var(--gray-400)">무료</div>
+              <div class="bar-track"><div class="bar-fill free" style="width:63%">3.15</div></div>
+            </div>
+          </div>
+          <!-- C3_3 -->
+          <div>
+            <div style="font-size:11px;color:var(--gray-600);margin-bottom:3px">③ AI 관련 지식·경험이 많음</div>
+            <div class="bar-item">
+              <div style="font-size:10px;min-width:30px;color:var(--teal);font-weight:700">유료</div>
+              <div class="bar-track"><div class="bar-fill paid" style="width:63%">3.15</div></div>
+            </div>
+            <div class="bar-item">
+              <div style="font-size:10px;min-width:30px;color:var(--gray-400)">무료</div>
+              <div class="bar-track"><div class="bar-fill free" style="width:57.6%">2.88</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="chart-box">
+          <div class="chart-label">C11: 에이전트 AI 필요성 — "매우 필요"</div>
+          <div style="display:flex;gap:24px;align-items:center;padding:12px 0">
+            <div style="text-align:center;flex:1">
+              <div style="font-size:28px;font-weight:800;color:var(--teal)">9.2%</div>
+              <div style="font-size:11px;color:var(--gray-600)">유료 사용자</div>
+            </div>
+            <div style="font-size:18px;color:var(--gray-400)">→</div>
+            <div style="text-align:center;flex:1">
+              <div style="font-size:28px;font-weight:800;color:var(--free-color)">3.6%</div>
+              <div style="font-size:11px;color:var(--gray-600)">무료 사용자</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--gray-400)">유료 이용자가 차세대 AI에 2.6배 더 관심</div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-label">자기강화 메커니즘</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.8">
+            앞선 집단 → 더 많이 쓴다 → 더 잘 쓴다<br>
+            → 더 투자한다 → 격차 확대<br><br>
+            <span style="color:var(--teal);font-weight:700">⟳ 자기강화 루프</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="key-stat">
+      📌 이미 앞선 쪽이 더 깊이 들어가므로 격차는 <span>시간이 갈수록 벌어질 수 있다</span> — 특히 <span>남성+직장권장 조합(39.3%)</span>이 격차의 최전선
+    </div>
+  </div>
+  <div class="datasource">출처: KOSSDA A1-2026-0004 / C3(자기평가), C11(에이전트 필요성)</div>
+  <div class="slide-footer"></div>
+</div>
+
+<!-- ===== 08 로지스틱 ===== -->
+<div class="slide" id="s8">
+  <div class="slide-header">
+    <div>
+      <div class="slide-num">08 | 시각화 ⑤ 계급의 결정</div>
+      <div class="slide-title">"무엇이 유료 사용자를 만드는가?"</div>
+      <div class="slide-subtitle">로지스틱 회귀 — 유료 이용 여부 예측 (n=603, McFadden R²=0.063)</div>
+    </div>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div class="chart-box">
+        <div class="chart-label">오즈비(OR) Forest Plot — 기준선 1.0 | 95% CI</div>
+        <canvas id="orChart" height="180"></canvas>
+        <div style="font-size:10px;color:var(--gray-400);margin-top:6px">
+          ** p&lt;.01 &nbsp;* p&lt;.05 &nbsp;| &nbsp;n.s. = 비유의 (p&gt;.05) &nbsp;| &nbsp;VIF 최대 7.3 (edu_num)
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="chart-box">
+          <div class="chart-label">회귀 결과 요약 (n=603)</div>
+          <table style="width:100%;font-size:11px;border-collapse:collapse">
+            <tr style="background:var(--gray-200)"><th style="padding:5px;text-align:left">변수</th><th>OR</th><th>95% CI</th><th>p</th></tr>
+            <tr style="background:var(--teal-pale)"><td style="padding:5px;font-weight:700;color:var(--teal)">직장 AI 권장</td><td style="text-align:center;font-weight:700">2.48</td><td style="text-align:center;font-size:10px">[1.44, 4.28]</td><td style="text-align:center;color:var(--teal);font-weight:700">0.001 **</td></tr>
+            <tr style="background:#FFF3EE"><td style="padding:5px;font-weight:700;color:#E07B54">남성 (vs 여성)</td><td style="text-align:center;font-weight:700">2.17</td><td style="text-align:center;font-size:10px">[1.32, 3.57]</td><td style="text-align:center;color:#E07B54;font-weight:700">0.002 **</td></tr>
+            <tr style="background:var(--gray-100)"><td style="padding:5px">연령 (10년)</td><td style="text-align:center">0.98</td><td style="text-align:center;font-size:10px">[0.96, 1.00]</td><td style="text-align:center;color:var(--gray-600)">0.041 *</td></tr>
+            <tr><td style="padding:5px">소득</td><td style="text-align:center">1.00</td><td style="text-align:center;font-size:10px">—</td><td style="text-align:center;color:var(--gray-400)">n.s.</td></tr>
+            <tr style="background:var(--gray-100)"><td style="padding:5px">학력</td><td style="text-align:center">1.13</td><td style="text-align:center;font-size:10px">—</td><td style="text-align:center;color:var(--gray-400)">n.s.</td></tr>
+            <tr><td style="padding:5px">수도권</td><td style="text-align:center">1.35</td><td style="text-align:center;font-size:10px">—</td><td style="text-align:center;color:var(--gray-400)">n.s.</td></tr>
+          </table>
+          <div style="font-size:10px;color:var(--gray-400);margin-top:4px">Pseudo R²=0.063 (McFadden) / 모형 p=0.00002</div>
+        </div>
+        <div class="policy-box">
+          🔍 핵심 발견: <strong>직장 AI 지원</strong>(OR=2.48)과 <strong>남성</strong>(OR=2.17)이 유일한 유의 예측변수. 소득·학력은 통제 후 비유의.
+        </div>
+        <div class="chart-box" style="padding:10px 14px">
+          <div class="chart-label">모형 비교 (AIC 기준)</div>
+          <table style="width:100%;font-size:10px;border-collapse:collapse">
+            <tr style="background:var(--gray-200)"><th style="padding:4px;text-align:left">모형</th><th>변수</th><th>R²</th><th>AIC</th></tr>
+            <tr style="background:var(--teal-pale)"><td style="padding:4px;font-weight:700;color:var(--teal)">M1 (절약)</td><td style="text-align:center">직장+성별</td><td style="text-align:center">0.049</td><td style="text-align:center;font-weight:700">479.3 ✓</td></tr>
+            <tr><td style="padding:4px">M2 (전체)</td><td style="text-align:center">6변수</td><td style="text-align:center">0.063</td><td style="text-align:center">480.1</td></tr>
+          </table>
+          <div style="font-size:10px;color:var(--teal);margin-top:4px">LR test p=.127 → M1이 더 간결·적합</div>
+        </div>
+        <div class="caution" style="font-size:10px">
+          ⚠️ VIF: edu_num=7.3, age_grp=6.3 다중공선성 주의. M1(직장+성별)은 VIF 모두 &lt;2.5로 안정적.
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:0">
+      <div class="chart-box" style="flex:1">
+        <div class="chart-label">성별 × 직장AI권장 교차 유료율 (핵심 패턴)</div>
+        <canvas id="crossChart" height="110"></canvas>
+      </div>
+      <div class="key-stat" style="flex:1.2;margin-top:0">
+        📌 AI 격차는 '개인 역량'이 아니라 <span>직장 지원(OR 2.48)</span> + <span>성별(OR 2.17)</span>의 구조적 조합이 만든다<br>
+        <span style="font-size:12px;font-weight:400">남성+직장권장: 39.3% vs 여성+비권장: 9.2% — 4.3배 차이</span>
+      </div>
+    </div>
+  </div>
+  <div class="datasource">출처: KOSSDA A1-2026-0004 / sm.Logit(), n=603, 절약적 모형(M1) AIC=479.3</div>
+  <div class="slide-footer"></div>
+</div>
+
+<!-- ===== 09 토의① ===== -->
+<div class="slide" id="s9">
+  <div class="slide-header">
+    <div>
+      <div class="slide-num">09 | 토의 ①</div>
+      <div class="slide-title">"AI는 새로운 계급을 만드는가?" — 데이터가 보여주는 대답</div>
+      <div class="slide-subtitle">질문 × 시각화 × 결과 종합 평가</div>
+    </div>
+  </div>
+  <div class="slide-body">
+    <div class="card-row">
+      <div class="card">
+        <div class="card-num">논점 1</div>
+        <div class="card-head">평등의 착시</div>
+        <div class="card-body">
+          '무료 개방 = 평등'은 <strong>외형일 뿐</strong>이다.<br><br>
+          접근은 평등하지만, 활용(용도 수 4.1 vs 2.7)과 효용(도움도 3.43 vs 3.03)은 구독 여부에 따라 갈린다.<br><br>
+          <em style="color:var(--teal);font-size:11px">무료 = 같은 AI가 아니다</em>
+        </div>
+      </div>
+      <div class="card accent">
+        <div class="card-num">논점 2</div>
+        <div class="card-head">새 계급이 아닌 옛 계급의 연장</div>
+        <div class="card-body">
+          유료 경계는 소득·학력 자체보다 <strong>직업 환경(직장 AI 지원, OR=2.48)</strong>을 따른다.<br><br>
+          AI가 새 계급을 창조한다기보다, <strong>기존 직업 위계가 AI 영역으로 재생산</strong>된다.<br><br>
+          <em style="color:var(--sage);font-size:11px">디지털 격차의 AI 버전</em>
+        </div>
+      </div>
+      <div class="card highlight">
+        <div class="card-num">논점 3</div>
+        <div class="card-head">젠더·직업 구조의 교차</div>
+        <div class="card-body">
+          <strong>남성+직장AI권장 조합: 39.3%</strong> vs 여성+비권장: 9.2% — 4배 이상 차이.<br><br>
+          IT·관리직 남성 편중 → AI 지원도 남성에 집중 → 젠더 격차와 직업 격차가 <strong>교차·증폭</strong>된다.<br><br>
+          <em style="color:#E07B54;font-size:11px">여성·비취업층이 가장 소외 계층</em>
+        </div>
+      </div>
+    </div>
+    <div class="caution" style="margin-top:4px">
+      <strong>인과 주의:</strong> 본 연구는 1회 단면 자료로, 집단 간 차이는 상관 관계이지 인과 관계가 아닙니다. '직장 AI 지원 → 유료 이용'의 방향성은 추가 연구로 검증이 필요합니다.
+    </div>
+    <div style="display:flex;gap:16px;margin-top:4px">
+      <div style="flex:1;background:var(--teal-pale);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--teal)">
+        <strong>Q. AI는 새로운 계급을 만드는가?</strong><br>
+        A: 새로 만들기보다, 기존 계급이 AI 영역으로 <strong>연장·증폭</strong>된다.
+      </div>
+      <div style="flex:1;background:var(--sage-pale);border-radius:8px;padding:12px 16px;font-size:12px;color:var(--sage)">
+        <strong>Q. 격차의 원인은?</strong><br>
+        A: 소득·학력(χ² p&gt;.10 비유의)보다 <strong>직장 지원·성별</strong>(OR 2.5, 2.2)이 결정적이다.
+      </div>
+      <div style="flex:1;background:#FFF3EE;border-radius:8px;padding:12px 16px;font-size:12px;color:#E07B54">
+        <strong>Q. 자기강화는?</strong><br>
+        A: 앞선 집단(남성+권장 39.3%)이 더 투자 → 에이전트 수요 2.6배 → <strong>격차 고착</strong> 위험.
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"></div>
+</div>
+
+<!-- ===== 10 토의② ===== -->
+<div class="slide" id="s10">
+  <div class="slide-header">
+    <div>
+      <div class="slide-num">10 | 토의 ②</div>
+      <div class="slide-title">"이 발견은 무엇을 의미하고, 무엇을 남기는가?"</div>
+      <div class="slide-subtitle">정책 함의 · 연구 한계 · 학문적 기여</div>
+    </div>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="chart-box">
+          <div class="chart-label">인식 vs 현실 — 02번 회수</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.8">
+            전체 응답자 <strong style="color:var(--teal)">66.5%</strong>가 "AI는 사회를 불평등하게 만들 것"이라 인식하지만 (C10-8),<br>
+            유료 이용자 자신은 <strong>56.3%</strong>만 동의<br><br>
+            → <em style="color:#E07B54">이미 혜택 받는 집단은 위기감이 낮고, 무료 사용자는 더 우려한다</em>
+          </div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-label">정책 함의</div>
+          <div style="font-size:12px;color:var(--text);line-height:1.9">
+            ① <strong>직장 AI 지원 정책 확대</strong> — OR=2.48, 가장 강력한 레버<br>
+            ② <strong>젠더 격차 해소</strong> — 여성 대상 AI 리터러시·지원 집중 (OR=2.17)<br>
+            ③ <strong>비취업·저소득층 접근성</strong> — AI 바우처, 무료 기능 확대<br>
+            → 직장 환경 개선 없이 개인 역량만 강조하면 격차 심화
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="chart-box">
+          <div class="chart-label">연구 한계 (Limitations)</div>
+          <div style="font-size:11px;color:var(--gray-600);line-height:1.9">
+            <strong>①</strong> <strong>단면 자료</strong> — 인과 방향 검증 불가 (직장 AI 권장 → 유료 vs 유료 → 직장 AI 권장?)<br>
+            <strong>②</strong> <strong>유료 분류 간접 추정</strong> — 구독 질문(BA6_12) 무응답 = 무료로 처리. 실제 무료 이용자 중 미응답 포함 가능성<br>
+            <strong>③</strong> <strong>표본 편향 가능성</strong> — 온라인 패널, 자기 보고 방식 → AI 친숙도 높은 집단 과대 대표<br>
+            <strong>④</strong> <strong>소득 결측</strong> — 미혼(DQ12_1)·기혼(DQ12_2) 병합, 일부 결측 보정 필요<br>
+            <strong>⑤</strong> <strong>시점 한계</strong> — 2026년 1월 1회 조사, 1년 이내 시장 변화 미반영 가능
+          </div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-label">학문적 기여 (Academic Contribution)</div>
+          <div style="font-size:11px;color:var(--text);line-height:1.9">
+            <strong style="color:var(--teal)">① 탐색적 선행 연구</strong> — 한국에서 생성형 AI 유료/무료 격차를 사회인구학적으로 분석한 초기 연구 (2026년 기준 해당 데이터 공개 직후)<br>
+            <strong style="color:var(--teal)">② 통념 반박</strong> — '소득·학력이 AI 격차를 만든다'는 가설을 기각하고 구조적 변수(직장·성별) 제시<br>
+            <strong style="color:var(--teal)">③ 방법론적 기여</strong> — 비모수 검정(BM)·표본 불균형 처리·VIF 기반 모형 선택 절차 제시<br>
+            <strong style="color:var(--teal)">④ 정책 실증 기반</strong> — 개인 역량 중심 접근의 한계를 데이터로 논증하고 구조 개입 정책 제안
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="key-stat" style="background:var(--sage)">
+      AI 격차는 기술의 문제가 아니라 <span>구조의 문제</span>다. 지금 개입하지 않으면, 디지털 격차가 AI 격차로, AI 격차가 새로운 불평등으로 굳어진다.
+    </div>
+  </div>
+  <div class="slide-footer"></div>
+</div>
+
+<!-- ===== 11 참고문헌 ===== -->
+<div class="slide" id="s11">
+  <div class="slide-header">
+    <div>
+      <div class="slide-num">11 | 참고문헌</div>
+      <div class="slide-title">References</div>
+    </div>
+  </div>
+  <div class="slide-body">
+    <div class="two-col">
+      <div>
+        <div class="chart-label" style="margin-bottom:8px">📁 데이터 출처</div>
+        <ul class="ref-list">
+          <li>
+            <strong>한국사회과학자료원 (KOSSDA)</strong>. (2026). <em>생성형 AI 서비스 소비자 동향조사 1차.</em>
+            자료번호: A1-2026-0004 (Ver. 1.1). 서울: 한국사회과학자료원.<br>
+            <span style="color:var(--teal);font-weight:700">DOI: 10.22687/KOSSDA-A1-2026-0004-V1</span>
+          </li>
+        </ul>
+        <div class="chart-label" style="margin-top:12px;margin-bottom:8px">🇰🇷 국내 통계·보고서</div>
+        <ul class="ref-list">
+          <li>과학기술정보통신부·NIA (2026). <em>2025 인터넷이용실태조사.</em> https://www.korea.kr/briefing/pressReleaseView.do?newsId=156751949</li>
+          <li>오주현 (2026). AI 포용 관점에서 본 생성형 AI 이용 격차. <em>KISDI STAT Report 26-04.</em> https://www.kisdi.re.kr/report/view.do?key=m2101113025790&artId=1938416</li>
+          <li>NIA (2025). <em>2024 디지털정보격차 실태조사</em> (고령층 71.4%, 저소득층 96.5%). https://www.nia.or.kr</li>
+        </ul>
+        <div class="chart-label" style="margin-top:12px;margin-bottom:8px">📚 선행연구 · 이론</div>
+        <ul class="ref-list">
+          <li>van Dijk, J. A. G. M. (2020). <em>The Digital Divide.</em> Polity Press.</li>
+          <li>Hargittai, E. (2002). Second-level digital divide. <em>First Monday, 7</em>(4).</li>
+        </ul>
+      </div>
+      <div>
+        <div class="chart-label" style="margin-bottom:8px">🌏 해외 자료</div>
+        <ul class="ref-list">
+          <li>Sidoti, O. & McClain, C. (2025, June). <em>34% of U.S. adults have used ChatGPT.</em> Pew Research Center. https://www.pewresearch.org/short-reads/2025/06/25/34-of-us-adults-have-used-chatgpt-about-double-the-share-in-2023/</li>
+          <li>OpenAI (2023). <em>GPT-4 Technical Report.</em> — AI 민주화 담론 근거</li>
+          <li>McKinsey Global Institute (2023). <em>The economic potential of generative AI.</em></li>
+        </ul>
+        <div class="chart-label" style="margin-top:12px;margin-bottom:8px">🏆 수상작 아카이브</div>
+        <ul class="ref-list">
+          <li>KOSSDA 데이터 페어 수상작 아카이브 (2024-2025). https://www.kossdadatafair.com</li>
+        </ul>
+        <div class="caution" style="margin-top:16px">
+          ⚠️ 인용 주의: KOSSDA 자료 DOI와 자료인용서식은 반드시 KOSSDA 공식 사이트에서 확인 후 최종본에 기재하세요. 본 슬라이드의 DOI는 임시 표시입니다.
+        </div>
+        <div class="policy-box" style="margin-top:12px;font-size:11px">
+          분석 도구: Python 3.10 · pyreadstat · scipy · statsmodels · Chart.js<br>
+          분석 일자: 2026년 6월 14일
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-footer"></div>
+</div>
+
+<!-- ===== 발표 스크립트 (팀 내부용) ===== -->
+<div class="slide" id="s12">
+  <div class="slide-header">
+    <div>
+      <div class="slide-num">SCRIPT</div>
+      <div class="slide-title">발표 스크립트 (팀 내부용)</div>
+      <div class="slide-subtitle">슬라이드별 1분 구성안 · 총 발표시간 약 8분</div>
+    </div>
+  </div>
+  <div class="slide-body" style="padding:24px 40px;overflow-y:auto;max-height:420px">
+    <div style="display:grid;gap:12px">
+
+      <div class="policy-box" style="border-left:4px solid #2D7D7D;padding-left:14px">
+        <strong style="color:#2D7D7D">슬라이드 02 — 문제제기 (30초)</strong><br>
+        <em>통념 제시 → 반전:</em><br>
+        "AI 격차라고 하면 많은 분들이 '접근 격차'를 떠올립니다. 스마트폰이 없거나 인터넷이 없는 분들이요. 그런데 저희 데이터를 들여다보니, 접근은 이미 민주화되어 있었습니다. 문제는 <em>접근 이후</em>였습니다."
+      </div>
+
+      <div class="policy-box" style="border-left:4px solid #2D7D7D;padding-left:14px">
+        <strong style="color:#2D7D7D">슬라이드 03 — 데이터·방법 (30초)</strong><br>
+        <em>데이터 신뢰성 확보:</em><br>
+        "KOSSDA가 올해 1월 전국 성인 800명을 대상으로 실시한 조사 데이터입니다. 저희는 이 중 실제로 생성형 AI를 써본 603명만을 분석 대상으로 삼았고, 유료 이용 여부를 명시적인 구독 응답으로 확인했습니다."
+      </div>
+
+      <div class="policy-box" style="border-left:4px solid #2D7D7D;padding-left:14px">
+        <strong style="color:#2D7D7D">슬라이드 04 — 경계 (45초)</strong><br>
+        <em>카이제곱 비유로 반전 전달:</em><br>
+        "첫 번째 놀라운 점은, 소득과 학력이 유료 이용과 유의한 상관이 없다는 것입니다. 돈이 많아야, 공부를 많이 해야 AI를 더 쓰는 게 아니었습니다. 유일하게 강하게 연결된 변수는 <em>직장에서 AI를 권장하는가</em>였습니다. p값이 0.001 미만으로 나왔습니다."
+      </div>
+
+      <div class="policy-box" style="border-left:4px solid #2D7D7D;padding-left:14px">
+        <strong style="color:#2D7D7D">슬라이드 05 — 활용폭 (45초)</strong><br>
+        <em>활용의 양적 격차:</em><br>
+        "유료 사용자는 평균 4.1개 기능을 씁니다. 무료 사용자는 2.7개입니다. 통계적으로 유의한 차이입니다. 그런데 더 흥미로운 건, 직장에서 AI를 권장하는 그룹이 가장 많은 기능을 쓴다는 점입니다. 직장 환경이 활용 폭을 결정하는 핵심 변수입니다."
+      </div>
+
+      <div class="policy-box" style="border-left:4px solid #2D7D7D;padding-left:14px">
+        <strong style="color:#2D7D7D">슬라이드 06 — 효용 (45초)</strong><br>
+        <em>질적 격차:</em><br>
+        "양뿐 아니라 질도 다릅니다. 유료 사용자는 '매우 도움'이라는 응답이 월등히 높고, 무료 사용자는 중간 구간에 몰려 있습니다. Brunner-Munzel 검정을 쓴 이유는 집단 크기가 불균형하기 때문입니다. 결과는 마찬가지로 유의했습니다."
+      </div>
+
+      <div class="policy-box" style="border-left:4px solid #2D7D7D;padding-left:14px">
+        <strong style="color:#2D7D7D">슬라이드 07 — 자기강화 (30초)</strong><br>
+        <em>격차 심화 메커니즘:</em><br>
+        "가장 인상적인 숫자는 이겁니다. 남성이면서 직장에서 AI를 권장받는 사람 중 39.3%가 유료 이용자입니다. 여성이면서 직장 지원이 없는 경우는 9.2%입니다. 네 배 차이입니다. 격차가 '누적'되고 있습니다."
+      </div>
+
+      <div class="policy-box" style="border-left:4px solid #2D7D7D;padding-left:14px">
+        <strong style="color:#2D7D7D">슬라이드 08 — 로지스틱 회귀 (1분)</strong><br>
+        <em>통계 결론 전달:</em><br>
+        "이 모든 변수를 동시에 통제한 로지스틱 회귀 결과입니다. 소득, 학력, 거주지는 모두 유의하지 않았습니다. 유의하게 남은 변수는 딱 두 개 — 직장 AI 권장(OR 2.48)과 남성(OR 2.17)입니다. 즉, AI 유료 이용 격차는 <em>경제 자본</em>이 아니라 <em>조직 자본</em>과 <em>젠더</em>로 설명됩니다."
+      </div>
+
+      <div class="policy-box" style="border-left:4px solid #5E8B74;padding-left:14px;background:#EDF4EF">
+        <strong style="color:#5E8B74">마무리 멘트 (15초)</strong><br>
+        "AI는 새로운 계급을 만드는가? 저희 결론은, 만들고 있다 — 단, 그 계급선은 지갑 두께가 아니라 <em>어떤 조직에 속해 있는가</em>와 <em>성별</em>이 긋고 있다는 것입니다. 감사합니다."
+      </div>
+
+      <div style="background:#FEF9E7;border:1px solid #F0D060;border-radius:8px;padding:12px;font-size:11px;color:#7D6000">
+        ⏱ 시간 배분 가이드: 슬라이드당 약 45초~1분. Q&A 예상 질문 — ①소득이 왜 무의미한가? ②여성 격차 해소 방안? ③데이터 n=87이면 충분한가?<br>
+        <strong>이 슬라이드는 심사 슬라이드 수에 포함되지 않도록 발표 파일에서 제외하세요.</strong>
+      </div>
+    </div>
+  </div>
+  <div class="datasource">팀 내부용 발표 준비 자료 · 심사 제출본에서 제외</div>
+</div>
+
+<script>
+// ===================== NAVIGATION =====================
+function go(n) {
+  document.querySelectorAll('.slide').forEach((s,i)=>{
+    s.classList.toggle('active', i===n);
+  });
+  document.querySelectorAll('.nav button').forEach((b,i)=>{
+    b.classList.toggle('active', i===n);
+  });
+  if(n===1 && !window.ch01) initCharts01();
+  if(n===5 && !window.ch05) initCharts05();
+  if(n===6 && !window.ch06) initCharts06();
+  if(n===8 && !window.ch08) initCharts08();
+}
+
+// ===================== CHART 01 =====================
+function initCharts01() {
+  window.ch01 = true;
+  // Donut
+  new Chart(document.getElementById('donutChart'), {
+    type:'doughnut',
+    data:{
+      labels:['유료 (14.4%)', '무료 (85.6%)'],
+      datasets:[{data:[87,516],backgroundColor:['#2D7D7D','#E8ECEB'],borderWidth:0}]
+    },
+    options:{plugins:{legend:{display:false}},cutout:'68%',animation:{duration:800}}
+  });
+  // Timeline bar (최초 이용시점) — data proportional
+  new Chart(document.getElementById('timelineChart'), {
+    type:'bar',
+    data:{
+      labels:['2022년\n이전','2023년','2024년','2025년\n상반기','2025년\n하반기','2026년~'],
+      datasets:[{
+        label:'최초 이용자 수',
+        data:[24, 84, 196, 228, 66, 5],
+        backgroundColor:['#2D7D7D','#2D7D7D','#2D7D7D','#2D7D7D','#5E8B74','#85B89A'],
+        borderRadius:4
+      }]
+    },
+    options:{
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>`${ctx.raw}명`}}
+      },
+      scales:{
+        y:{
+          ticks:{font:{size:9},callback:v=>v+'명'},
+          grid:{color:'#E8ECEB'},
+          title:{display:true,text:'응답자 수',font:{size:9}}
+        },
+        x:{ticks:{font:{size:9},maxRotation:0}}
+      },
+      animation:{duration:800}
+    }
+  });
+  // Awareness bar
+  new Chart(document.getElementById('awareChart'), {
+    type:'bar',
+    data:{
+      labels:['많이 듣고\n많이 사용','들어봤고\n사용 경험','들어봤지만\n미사용','거의 못\n들어봄','처음\n들어봄'],
+      datasets:[{
+        data:[311,292,174,10,13],
+        backgroundColor:['#2D7D7D','#4AADAD','#9AADA7','#C5D8D5','#E8ECEB'],
+        borderRadius:4
+      }]
+    },
+    options:{
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{display:true,ticks:{font:{size:9}},grid:{display:false}},
+        x:{ticks:{font:{size:9}}}
+      },
+      animation:{duration:800}
+    }
+  });
+}
+
+// ===================== CHART 05 =====================
+function initCharts05() {
+  window.ch05 = true;
+  const labels = ['자료검색','문서작성','대화/상담','교육/학습','맞춤추천','콘텐츠제작','아이디어','업무자동화','번역','코딩/분석'];
+  const paid =   [81.6, 67.8, 35.6, 28.7, 20.7, 32.2, 48.3, 25.3, 44.8, 19.5];
+  const free =   [75.5, 45.9, 26.9, 12.5, 11.5, 17.3, 19.2, 10.6, 43.3,  4.8];
+  new Chart(document.getElementById('useChart'), {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'유료',data:paid,backgroundColor:'#2D7D7D',borderRadius:3},
+        {label:'무료',data:free,backgroundColor:'#9AADA7',borderRadius:3}
+      ]
+    },
+    options:{
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{max:100,ticks:{callback:v=>v+'%',font:{size:9}},grid:{color:'#E8ECEB'}},
+        x:{ticks:{font:{size:9}}}
+      },
+      animation:{duration:800}
+    }
+  });
+}
+
+// ===================== CHART 06 =====================
+function initCharts06() {
+  window.ch06 = true;
+  new Chart(document.getElementById('helpChart'), {
+    type:'bar',
+    data:{
+      labels:['매우 도움','약간 도움','보통','별로 안 됨'],
+      datasets:[
+        {label:'유료 (n=87)', data:[47.1,48.3,4.6,0], backgroundColor:'#2D7D7D',borderRadius:3},
+        {label:'무료 (n=416)', data:[18.0,68.0,13.0,1.0], backgroundColor:'#9AADA7',borderRadius:3}
+      ]
+    },
+    options:{
+      plugins:{legend:{position:'top',labels:{font:{size:10}}}},
+      scales:{
+        y:{max:80,ticks:{callback:v=>v+'%',font:{size:9}},grid:{color:'#E8ECEB'}},
+        x:{ticks:{font:{size:10}}}
+      },
+      animation:{duration:800}
+    }
+  });
+  // Distribution of n_uses (number of features used) — paid vs free
+  const labels=['1개','2개','3개','4개','5개','6개','7개','8개','9개','10개'];
+  const paidCounts= [8,19,19,8,13,5,3,9,1,2];  // n=87
+  const freeCounts= [133,91,78,53,39,5,11,4,2,0]; // n=416 (subset that answered)
+  const paidPct = paidCounts.map(v=>(v/87*100).toFixed(1)*1);
+  const freePct = freeCounts.map(v=>(v/416*100).toFixed(1)*1);
+  new Chart(document.getElementById('distChart'), {
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'유료(%)', data:paidPct, backgroundColor:'#2D7D7D', borderRadius:3},
+        {label:'무료(%)', data:freePct, backgroundColor:'#C5D8D5', borderRadius:3}
+      ]
+    },
+    options:{
+      plugins:{legend:{position:'right',labels:{font:{size:9},boxWidth:10}}},
+      scales:{
+        y:{ticks:{callback:v=>v+'%',font:{size:8}},grid:{color:'#E8ECEB'},title:{display:true,text:'비율(%)',font:{size:8}}},
+        x:{ticks:{font:{size:9}}}
+      },
+      animation:{duration:800}
+    }
+  });
+}
+
+// ===================== CHART 08 =====================
+function initCharts08() {
+  window.ch08 = true;
+  new Chart(document.getElementById('orChart'), {
+    type:'bar',
+    data:{
+      labels:['직장AI권장 **','남성(vs여성) **','연령(10년) *','학력 n.s.','소득 n.s.','수도권 n.s.'],
+      datasets:[{
+        label:'오즈비(OR)',
+        data:[2.48, 2.17, 0.98, 1.13, 1.00, 1.35],
+        backgroundColor:['#2D7D7D','#E07B54','#C5D8D5','#C5D8D5','#C5D8D5','#C5D8D5'],
+        borderRadius:4
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>`OR = ${ctx.raw}`}}
+      },
+      scales:{
+        x:{min:0.5,max:3.2,
+          ticks:{font:{size:9}},
+          grid:{color:'#E8ECEB'},
+          title:{display:true,text:'오즈비 (기준선 1.0)',font:{size:9}}
+        },
+        y:{ticks:{font:{size:10}}}
+      },
+      animation:{duration:800}
+    }
+  });
+  // Draw reference line at OR=1
+  Chart.register({
+    id:'refLine',
+    afterDraw(chart){
+      if(!chart.canvas.id.startsWith('orChart')) return;
+      const {ctx,chartArea,scales}=chart;
+      const x=scales.x.getPixelForValue(1);
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(x,chartArea.top);
+      ctx.lineTo(x,chartArea.bottom);
+      ctx.strokeStyle='#5C6E69';
+      ctx.lineWidth=1.5;
+      ctx.setLineDash([4,3]);
+      ctx.stroke();
+      ctx.restore();
+    }
+  });
+  // Cross chart: gender × workplace
+  new Chart(document.getElementById('crossChart'), {
+    type:'bar',
+    data:{
+      labels:['여성+비권장','여성+권장','남성+비권장','남성+권장'],
+      datasets:[{
+        label:'유료 이용률(%)',
+        data:[9.2, 11.4, 14.6, 39.3],
+        backgroundColor:['#C5D8D5','#85B89A','#4AADAD','#2D7D7D'],
+        borderRadius:4
+      }]
+    },
+    options:{
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw}%`}}},
+      scales:{
+        y:{max:50, ticks:{font:{size:9},callback:v=>v+'%'}, grid:{color:'#E8ECEB'}},
+        x:{ticks:{font:{size:9}}}
+      },
+      animation:{duration:800}
+    }
+  });
+}
+
+// Init slide 0 (cover) charts on load
+window.addEventListener('load', ()=>{
+  // initialize chart on slide 1 only when visited
+});
+</script>
+</body>
+</html>
